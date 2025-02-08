@@ -230,4 +230,14 @@ def validate_ner_sequence(ner):
     """
     #TODO: YOUR CODE HERE
 
-    raise NotImplementedError()
+    current_tag = None
+    for t in ner:
+      if t == "O":
+        current_tag = None
+        continue
+
+      prefix, tag = t.split("-")
+      if prefix == "I" and current_tag != tag:
+        return False
+      current_tag = tag
+    return True
