@@ -105,6 +105,61 @@ def load_dataset(data_zip_path, dest_path):
 
 ## ================== Functions for students to implement ======================
 
+def combine_tokens(tokens):
+    """
+    Joins words with spaces while taking care of punctuation (ie. removes spaces before periods, commas, etc.)
+    """
+    words = []
+
+    punct_left = ",.!?:;%)}]"
+    punct_right = "({[$#£"
+    curr_right_assoc = ""
+    in_quote = False
+
+    for token in tokens:
+        token = token.strip()  # remove double whitespace
+
+        if token in punct_left or (token[0] == "'" and len(token) > 1) or token == "s":  # eg. 'nt
+            # add to most recent word
+            if not words:
+              words.append("")
+            # make sure any previous right_assoc goes in first
+            if curr_right_assoc:
+              words.append(curr_right_assoc)
+              curr_right_assoc = ""
+            words[-1] += token
+
+        elif token in punct_right:
+          curr_right_assoc += token
+
+        elif token == '"' or token == "'":
+          if in_quote: 
+            # close quote is left-assoc
+            if not words:
+              words.append("")
+            # make sure any previous right_assoc goes in first
+            if curr_right_assoc:
+              words.append(curr_right_assoc)
+              curr_right_assoc = ""
+            words[-1] += token
+            in_quote = False
+          else:
+            # open quote is right_assoc
+            curr_right_assoc += token
+            in_quote = True
+
+        else:
+          token = curr_right_assoc + token
+          curr_right_assoc = ""
+          words.append(token)
+
+    if curr_right_assoc != "":
+      words.append(curr_right_assoc)
+
+    joined = " ".join(words)
+    return joined
+    
+
 def stringify_labeled_doc(text, ner):
     """
     Returns a string representation of a tagged sentence from the dataset.
@@ -133,8 +188,36 @@ def stringify_labeled_doc(text, ner):
       returns "[PER Gavin Fogel] is cool."
     """
     # TODO: YOUR CODE HERE
+    result = []
+    current_tag = None
+    current_string = []
+    for word, tag in zip(text, ner):
+        if tag[0] != "I" and current_tag is not None:
+            # end previous entity, add into result
+            entity = f"[{current_tag} {combine_tokens(current_string)}]"
+            result.append(entity)
+            current_string = []
+            current_tag = None
 
-    raise NotImplementedError()
+        if tag == "O":
+            result.append(word)
+            continue
+
+        prefix, tag = tag.split("-")
+        if prefix == "B" or (current_tag != tag and prefix == "I"):
+            # start new named entity
+            current_tag = tag
+            current_string = [word]
+        else:
+            current_string.append(word)
+
+    if current_tag is not None:
+      # end last entity, add into result
+      entity = f"[{current_tag} {combine_tokens(current_string)}]"
+      result.append(entity)
+
+    return combine_tokens(result)
+    
 
 def validate_ner_sequence(ner):
     """
