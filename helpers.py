@@ -44,8 +44,38 @@ def handle_unknown_words(t, documents):
     # vocab: ['banana', 'apple', 'cherry', '<unk>']
     """
     # YOUR CODE HERE
-    raise NotImplementedError()
+    
+        
+    all_words = sum(documents, [])
 
+    unique, counts = np.unique(all_words, return_counts=True)
+    # order first by frequency, then alphabetically
+    # --> stable sort: first sort alphabetically, then by frequency
+
+    words = list(zip(unique, counts))
+    words.sort(
+        key=lambda x: x[0]
+    )
+    words.sort(
+        key=lambda x: x[1]
+    )
+    unique, counts = list(zip(*words))
+    num_replace = int(t * len(unique))
+
+    to_replace = unique[:num_replace]
+    vocab = list(unique[num_replace:][::-1]) + ["<unk>"]
+
+    new_documents = []
+    for d in documents:
+        new_doc = []
+        for word in d:
+            if word in to_replace:
+                word = "<unk>"
+            new_doc.append(word)
+        new_documents.append(new_doc)
+
+    return new_documents, vocab
+    
 
 def apply_smoothing(k, observation_counts, unique_obs):
     """
