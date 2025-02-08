@@ -75,7 +75,7 @@ def handle_unknown_words(t, documents):
         new_documents.append(new_doc)
 
     return new_documents, vocab
-    
+
 
 def apply_smoothing(k, observation_counts, unique_obs):
     """
@@ -107,4 +107,25 @@ def apply_smoothing(k, observation_counts, unique_obs):
     Note that the function will be applied to both transition_matrix and emission_matrix. 
     """
     # YOUR CODE HERE 
-    raise NotImplemented()
+    tags, words = list(zip(*observation_counts.keys()))
+    tags, words = set(tags), set(words)
+    n_tags, n_words = len(list(tags)), len(list(words))
+    if set(tags) == set(unique_obs):
+        index = 0
+    elif set(words) == set(unique_obs):
+        index = 1
+    else:
+        raise ValueError
+    
+    # use np array to store counts
+    tags_words, values = zip(*observation_counts.items())
+
+    values = np.array(values).reshape((n_tags, n_words)) + k
+    values = values / values.sum(axis=index, keepdims=True)
+    values = np.log(values)
+
+    flat = values.reshape(-1,).tolist()
+    smoothed_obs = {tw: v for tw, v in zip(tags_words, flat)}
+
+    return smoothed_obs
+        
