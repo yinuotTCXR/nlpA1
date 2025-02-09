@@ -68,11 +68,11 @@ class HMM:
         counts[(i, j)] = 0
 
     for d in self.labels:
-      d += ["qf"]
       last_tag = d[0] 
       for tag in d[1:]:
         counts[(last_tag, tag)] += 1
         last_tag = tag
+      counts[(last_tag, "qf")] += 1
 
     transition_matrix = self.smoothing_func(
       self.k_t, counts, tagset
@@ -174,4 +174,26 @@ class HMM:
       result: Float
     """
     # YOUR CODE HERE 
-    raise NotImplementedError()
+    
+    # deal with last token
+    if predicted_tag == "qf":
+      assert i == len(document)
+      return self.transition_matrix[(previous_tag, "qf")]
+    
+    word = document[i]
+    
+    # deal with unknown token
+    if word not in self.vocab:
+      word = "<unk>"
+
+    # deal with first word
+    if i == 0:
+      assert previous_tag is None
+      transition_prob = self.start_state_probs[predicted_tag]
+    else:
+      assert previous_tag is not None
+      transition_prob = self.transition_matrix[(previous_tag, predicted_tag)]
+    emission_prob = self.emission_matrix[(predicted_tag, word)]
+    return transition_prob + emission_prob
+
+
