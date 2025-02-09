@@ -40,7 +40,7 @@ class HMM:
     self.smoothing_func = smoothing_func
     self.emission_matrix = self.build_emission_matrix()
     self.transition_matrix = self.build_transition_matrix()
-    self.start_state_probs = self.get_start_state_probs()
+    # self.start_state_probs = self.get_start_state_probs()
 
 
   def build_transition_matrix(self):
@@ -60,8 +60,24 @@ class HMM:
       transition_matrix: Dict<key Tuple[String, String] : value Float>
     """
     # YOUR CODE HERE
-    raise NotImplementedError()
 
+    counts = {}  # transition counts
+    tagset = self.all_tags + ["qf"]
+    for i in self.all_tags:
+      for j in tagset:
+        counts[(i, j)] = 0
+
+    for d in self.labels:
+      d += ["qf"]
+      last_tag = d[0] 
+      for tag in d[1:]:
+        counts[(last_tag, tag)] += 1
+        last_tag = tag
+
+    transition_matrix = self.smoothing_func(
+      self.k_t, counts, tagset
+    )
+    return transition_matrix
 
   def build_emission_matrix(self): 
     """
@@ -81,7 +97,20 @@ class HMM:
       Its size should be len(vocab) * len(all_tags).
     """
     # YOUR CODE HERE
-    raise NotImplementedError()
+    
+    counts = {}  # emission counts
+    for i in self.all_tags:
+      for j in self.vocab:
+        counts[(i, j)] = 0
+
+    for words, tags in zip(self.documents, self.labels):
+      for word, tag in zip(words, tags):
+        counts[(tag, word)] += 1
+
+    emission_matrix = self.smoothing_func(
+      self.k_e, counts, self.vocab
+    )
+    return emission_matrix
 
 
   def get_start_state_probs(self):
