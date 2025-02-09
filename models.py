@@ -40,7 +40,7 @@ class HMM:
     self.smoothing_func = smoothing_func
     self.emission_matrix = self.build_emission_matrix()
     self.transition_matrix = self.build_transition_matrix()
-    # self.start_state_probs = self.get_start_state_probs()
+    self.start_state_probs = self.get_start_state_probs()
 
 
   def build_transition_matrix(self):
@@ -131,7 +131,21 @@ class HMM:
       start_state_probs: Dict<key String : value Float>
     """
     # YOUR CODE HERE 
-    raise NotImplementedError()
+
+    counts = {}  # transition counts
+    for i in self.all_tags:
+      counts[i] = self.k_s
+
+    total = len(self.all_tags) * self.k_s
+    for d in self.labels:
+      if not d:
+        continue
+      counts[d[0]] += 1
+      total += 1
+    
+    for i in self.all_tags:
+      counts[i] = np.log(counts[i] / total)
+    return counts
 
 
   def get_tag_likelihood(self, predicted_tag, previous_tag, document, i): 
