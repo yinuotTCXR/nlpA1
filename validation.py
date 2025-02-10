@@ -109,4 +109,19 @@ def evaluate_model(model, val_set, tags):
     mean_F1_score: Float, representing the mean f1 score when the model evaluated using the validation set
   """
   # YOUR CODE HERE 
-  raise NotImplementedError()
+  
+  val_predictions = []
+  val_labels = []
+  indices = []
+
+  for i in range(len(val_set["text"])):
+      obs = val_set['text'][i]
+      predicted_tags = viterbi(model, obs, tags)
+
+      val_predictions += predicted_tags
+      val_labels += val_set["NER"][i]
+      indices += val_set["index"][i]
+
+  predictions = format_output_labels(val_predictions, indices)
+  labels = format_output_labels(val_labels, indices)
+  return mean_f1(predictions, labels)
